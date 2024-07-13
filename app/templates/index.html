@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EZStudy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+</head>
+<body>
+    <header>
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="EZStudy Logo" class="logo">
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+                <li><a href="/subscribe">Subscribe</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h1>Welcome to EZStudy</h1>
+        <h2>Convert lessons into easy formats</h2>
+        <input type="file" id="fileInput">
+        <textarea id="textInput" placeholder="Or type/paste your text here..."></textarea>
+        <button id="voiceInputButton">Start Voice Input</button>
+        <p id="feedback"></p>
+        <button onclick="submitContent()">Submit</button>
+    </main>
+    <script>
+        let recognizer;
+
+        async function createRecognizer() {
+            recognizer = speechCommands.create('BROWSER_FFT');
+            await recognizer.ensureModelLoaded();
+        }
+
+        createRecognizer();
+
+        const feedback = document.getElementById('feedback');
+        const voiceInputButton = document.getElementById('voiceInputButton');
+        const textInput = document.getElementById('textInput');
+
+        voiceInputButton.addEventListener('click', () => {
+            if (recognizer) {
+                recognizer.listen(result => {
+                    const scores = result.scores;
+                    const words = recognizer.wordLabels();
+                    const highestScoreWord = words[scores.indexOf(Math.max(...scores))];
+                    textInput.value += highestScoreWord + ' ';
+                    feedback.innerText = 'Voice input recognized: ' + highestScoreWord;
+                }, {
+                    probabilityThreshold: 0.75
+                });
+            } else {
+                feedback.innerText = 'Voice recognition is not supported in your browser.';
+            }
+        });
+
+        function submitContent() {
+            const text = textInput.value;
+            // Submit the text content via a form or an AJAX request
+        }
+    </script>
+</body>
+</html>

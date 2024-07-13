@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>EZStudy</h1>
+    <form id="voice-form">
+        <label for="voice-input">Speak something:</label>
+        <input type="text" id="voice-input" name="voice-input" readonly>
+        <button type="button" onclick="startRecording()">Start Recording</button>
+        <select id="format-type">
+            <option value="funny_statement">Funny Statement</option>
+            <option value="simple_code">Simple Code</option>
+            <option value="song">Song</option>
+            <option value="story">Story</option>
+            <option value="rhyme">Rhyme</option>
+        </select>
+        <button type="button" onclick="convertText()">Convert</button>
+    </form>
+    <p id="response"></p>
+    <script>
+        function startRecording() {
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('voice-input').value = transcript;
+            };
+
+            recognition.onspeechend = function() {
+                recognition.stop();
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error detected: ' + event.error);
+            };
+        }
+
+        function convertText() {
+            const text = document.getElementById('voice-input').value;
+            const formatType = document.getElementById('format-type').value;
+
+            fetch('/convert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text, format_type: formatType })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerText = data.converted_text;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
+
